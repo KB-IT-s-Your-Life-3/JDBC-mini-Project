@@ -6,6 +6,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 import com.mp.exception.AlreadyDealedException;
@@ -52,7 +53,7 @@ public class DAO implements DAOTemplete{
 		ResultSet rs = null;
 		
 		conn = getConnect();
-		String query = "SELECT asset_id FROM asset WHERE asset_id=? AND is_dealed=0";
+		String query = "SELECT asset_id FROM asset WHERE asset_id=? AND is_dealed=1";
 		ps = conn.prepareStatement(query);
 		ps.setInt(1, assetId);
 		
@@ -92,7 +93,7 @@ public class DAO implements DAOTemplete{
 	}
 	
 	@Override
-	public Customer getCustomer(String id) throws SQLException, RecordNotFoundException {
+	public Customer getCustomer(int custId) throws SQLException, RecordNotFoundException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
@@ -140,37 +141,127 @@ public class DAO implements DAOTemplete{
 	}
 	
 	@Override
-	public ArrayList<Deal> getPortfolio(int id) throws SQLException {
+	public ArrayList<Deal> getPortfolio(int custId) throws SQLException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
+		ArrayList<Deal> arr = new ArrayList<Deal>();
 		try {
 			conn = getConnect();
+			String query = "SELECT deal_id, cust_id, asset_id, dealed_money, dealed_at FROM deal WHERE cust_id=? ORDER BY 5";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, custId);
+			rs = ps.executeQuery();
+			while(rs.next()) {
+				arr.add(new Deal(
+							rs.getInt("deal_id"),
+							rs.getInt("cust_id"),
+							rs.getInt("asset_id"),
+							rs.getLong("dealed_money"),
+							rs.getTimestamp("dealed_at").toLocalDateTime()));
+			}
+			
 		} finally {
 			closeAll(conn, ps, rs);
 		}
-		return null;
+		return arr;
 	}
 	
 	@Override
 	public void buyAsset(int custId, int assetId) throws SQLException, RecordNotFoundException, AlreadyDealedException, InvalidMoneyException {
 		Connection conn = null;
 		PreparedStatement ps = null;
+		ResultSet rs = null;
 		try {
 			conn = getConnect();
+			String query = "SELECT price FROM asset WHERE asset_id=? AND is_dealed=0";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, assetId);
+			rs = ps.executeQuery();
+			if(rs.next()) {
+				long price = rs.getLong("price");
+				Deal deal = checkDeal(custId, assetId, conn);
+				if(deal!=null) updateDeal(deal, custId, conn);
+				else createDeal(custId, assetId, price, conn);
+				
+				query = "UPDATE asset SET is_dealed=1 WHERE asset_id=?";
+				ps = conn.prepareStatement(query);
+				ps.setInt(1, assetId);
+				int row = ps.executeUpdate();
+				System.out.println(row + " asset is dealed.");
+			} else throw new AlreadyDealedException("존재하지 않는 매물입니다.");
 		} finally {
 			closeAll(conn,ps);
 		}
+	}
+	
+	public void createDeal(int custId, int assetId, long dealedMoney, Connection conn) throws SQLException {
+		PreparedStatement ps = null;
+		String query = "INSERT INTO deal (deal_id, cust_id, asset_id, dealed_money, dealed_at) VALUES (seq_deal.nextVal , ?, ?, ?, SYSDATE)";
+		ps = conn.prepareStatement(query);
+		ps.setInt(1, custId);
+		ps.setInt(2, assetId);
+		ps.setLong(3, dealedMoney);
+		int row = ps.executeUpdate();
+		System.out.println(row + " deal created");
+	}
+	
+	public void updateDeal(Deal deal, int custId, Connection conn) throws SQLException, RecordNotFoundException, InvalidMoneyException {
+		PreparedStatement ps = null;
+		String query = "UPDATE deal SET cust_id=? WHERE deal_id=?";
+		ps = conn.prepareStatement(query);
+		ps.setInt(1, custId);
+		ps.setInt(2, deal.getDealId());
+		int row = ps.executeUpdate();
+		System.out.println(row + " deal updated");
+		
+		Customer owner = getCustomer(deal.getCustId());
+		owner.setMoney(owner.getMoney()+deal.getPrice());
+		updateCustomer(owner);
+	}
+	
+	public Deal checkDeal(int custId, int assetId, Connection conn) throws SQLException {
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		Deal deal = null;
+		conn = getConnect();
+		String query = "SELECT deal_id, cust_id, asset_id, dealed_money, dealed_at FROM deal WHERE cust_id=? AND asset_id=?";
+		ps = conn.prepareStatement(query);
+		ps.setInt(1, custId);
+		ps.setInt(2, assetId);
+		rs = ps.executeQuery();
+		if(rs.next()) deal = new Deal(
+								rs.getInt("deal_id"),
+								rs.getInt("cust_id"),
+								rs.getInt("asset_id"),
+								rs.getLong("dealed_money"),
+								rs.getTimestamp("dealted_at").toLocalDateTime()
+							);
+		return deal;
 	}
 	
 	@Override
 	public void enrollAsset(int custId, int assetId) throws SQLException, RecordNotFoundException {
 		Connection conn = null;
 		PreparedStatement ps = null;
+		ResultSet rs = null;
 		try {
 			conn = getConnect();
+			String query = "SELECT deal_id FROM deal WHERE cust_id=? AND asset_id=?";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, custId);
+			ps.setInt(2, assetId);
+			rs = ps.executeQuery();
+			if(rs.next()) {
+				query = "UPDATE asset SET is_dealed=0 WHERE asset_id=?";
+				ps = conn.prepareStatement(query);
+				ps.setInt(1, assetId);
+				int row = ps.executeUpdate();
+				System.out.println(row + " assets update to sell");
+			} else throw new RecordNotFoundException("해당 부동산을 소유하고 있지 않습니다.");
+			
 		} finally {
-			closeAll(conn,ps);
+			closeAll(conn, ps, rs);
 		}
 	}
 	
@@ -178,8 +269,22 @@ public class DAO implements DAOTemplete{
 	public void cancelEnrollAsset(int custId, int assetId) throws SQLException, RecordNotFoundException {
 		Connection conn = null;
 		PreparedStatement ps = null;
+		ResultSet rs = null;
 		try {
 			conn = getConnect();
+			String query = "SELECT deal_id FROM deal WHERE cust_id=? AND asset_id=?";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, custId);
+			ps.setInt(2, assetId);
+			rs = ps.executeQuery();
+			if(rs.next()) {
+				query = "UPDATE asset SET is_dealed=1 WHERE asset_id=?";
+				ps = conn.prepareStatement(query);
+				ps.setInt(1, assetId);
+				int row = ps.executeUpdate();
+				System.out.println(row + " assets update to do not sell");
+			} else throw new RecordNotFoundException("해당 부동산을 소유하고 있지 않습니다.");
+			
 		} finally {
 			closeAll(conn,ps);
 		}
@@ -191,6 +296,7 @@ public class DAO implements DAOTemplete{
 		PreparedStatement ps = null;
 		try {
 			conn = getConnect();
+			
 		} finally {
 			closeAll(conn,ps);
 		}
@@ -201,12 +307,22 @@ public class DAO implements DAOTemplete{
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
+		ArrayList<Asset> arr = null;
 		try {
 			conn = getConnect();
+			String query = "SELECT a.asset_id, r.go, r.dong, a.asset_name, a.created_at, a.price, a.area, a.constructed_year, a.is_dealed "
+					+ "FROM deal d, asset a, region "
+					+ "WHERE d.cust_id=? AND d.asset_id = a.asset_id AND a.dong_id = r.dong_id;";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, custId);
+			rs = ps.executeQuery();
+			while(rs.next()) {
+//				arr.add(new Asset(rs.getInt("asset_id"), , query, query, query, query, custId, custId, false))
+			};
 		} finally {
 			closeAll(conn, ps, rs);
 		}
-		return null;
+		return arr;
 	}
 	
 	@Override
@@ -245,6 +361,12 @@ public class DAO implements DAOTemplete{
 		} finally {
 			closeAll(conn, ps, rs);
 		}
+		return null;
+	}
+
+	@Override
+	public Customer getCustomer(String id) throws SQLException, RecordNotFoundException {
+		// TODO Auto-generated method stub
 		return null;
 	}  
   

@@ -1,6 +1,20 @@
 package com.mp.vo;
 public class Asset {
-  private int assetId, constructedYear;
+  public Asset(int assetId, int constructedYear, String assetName, String gu, String dong, String cereatedAt,
+			float size, long price, boolean isDealed) {
+		super();
+		this.assetId = assetId;
+		this.constructedYear = constructedYear;
+		this.assetName = assetName;
+		this.gu = gu;
+		this.dong = dong;
+		this.cereatedAt = cereatedAt;
+		this.size = size;
+		this.price = price;
+		this.isDealed = isDealed;
+	}
+
+private int assetId, constructedYear;
   private String assetName, gu, dong, cereatedAt;
   private float size;
   private long price;

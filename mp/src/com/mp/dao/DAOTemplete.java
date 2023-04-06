@@ -22,7 +22,7 @@ public interface DAOTemplete {
   ArrayList<Customer> getAllCustomer() throws SQLException;
   void deleteCustomer(int id) throws SQLException, RecordNotFoundException;
   void updateCustomer(Customer c) throws SQLException, RecordNotFoundException, InvalidMoneyException;
-  ArrayList<Deal> getPortfolio(int id) throws SQLException;
+  ArrayList<Deal> getPortfolio(int custId) throws SQLException;
   void buyAsset(int custId, int assetId) throws SQLException, RecordNotFoundException, AlreadyDealedException, InvalidMoneyException;
   void enrollAsset(int custId, int assetId) throws SQLException, RecordNotFoundException;
   void cancelEnrollAsset(int custId, int assetId) throws SQLException, RecordNotFoundException;
@@ -32,4 +32,5 @@ public interface DAOTemplete {
   ArrayList<AssetTable> getAvgAssetsPrice() throws SQLException;
   ArrayList<AssetTable> getAllAssets() throws SQLException;
   boolean isDealed(int assetId, Connection conn) throws SQLException, RecordNotFoundException;
+Customer getCustomer(int custId) throws SQLException, RecordNotFoundException;
 }

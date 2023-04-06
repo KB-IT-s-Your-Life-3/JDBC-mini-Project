@@ -4,11 +4,22 @@ import java.time.LocalDateTime;
 public class Deal {
   int dealId, custId, assetId;
   long price;
-  LocalDateTime dealedAT;
+  LocalDateTime dealedAt;
 
-  public Deal() {};
+  public Deal(int dealId, int custId, int assetId, long price, LocalDateTime dealedAt) {
+	super();
+	this.dealId = dealId;
+	this.custId = custId;
+	this.assetId = assetId;
+	this.price = price;
+	this.dealedAt = dealedAt;
+  }
+  
+  public Deal(int custId, int assetId, long price, LocalDateTime dealedAt) {
+	  this(0, custId, assetId, price, dealedAt);
+  }
 
-  public int getAssetId() {
+public int getAssetId() {
     return assetId;
   }
 
@@ -33,11 +44,11 @@ public class Deal {
   }
 
   public LocalDateTime getDealedAT() {
-    return dealedAT;
+    return dealedAt;
   }
 
   public void setDealedAT(LocalDateTime dealedAT) {
-    this.dealedAT = dealedAT;
+    this.dealedAt = dealedAT;
   }
 
   public long getPrice() {
