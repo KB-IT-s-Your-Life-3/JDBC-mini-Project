@@ -22,6 +22,8 @@ public interface DAOTemplete {
   
   Customer getCustomer(String id) throws SQLException, RecordNotFoundException;
   
+  Customer getCustomer(int cust_id) throws SQLException, RecordNotFoundException;
+
   ArrayList<Customer> getAllCustomer() throws SQLException;
   
   void deleteCustomer(int id) throws SQLException, RecordNotFoundException;
