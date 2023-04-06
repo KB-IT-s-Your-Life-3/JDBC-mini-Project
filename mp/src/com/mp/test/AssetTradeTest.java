@@ -16,6 +16,7 @@ public class AssetTradeTest {
     ArrayList<Asset> arrAsset = new ArrayList<>();
     ArrayList<AssetTable> arrTAsset = new ArrayList<>();
     
+    
     System.out.println("=====gilyeon test======");
 //    System.err.println("---addAsset(Asset asset)---");
 //    try {
@@ -23,6 +24,7 @@ public class AssetTradeTest {
 //	} catch (SQLException e) {
 //		e.printStackTrace();
 //	}
+    
     
 //    System.err.println("---getAssets(String address)---");
 //    try {
@@ -38,9 +40,19 @@ public class AssetTradeTest {
 //		e.printStackTrace();
 //	}
     
-    System.err.println("---getAssetsCount()---");
+    
+//    System.err.println("---getAssetsCount()---");
+//    try {
+//    	arrTAsset = db.getAssetsCount();
+//    	for(AssetTable a : arrTAsset)System.out.println(a);
+//	} catch (SQLException e) {
+//		e.printStackTrace();
+//	}
+    
+    
+    System.err.println("---getAvgAssetsPrice()---");
     try {
-    	arrTAsset = db.getAssetsCount();
+    	arrTAsset = db.getAvgAssetsPrice();
     	for(AssetTable a : arrTAsset)System.out.println(a);
 	} catch (SQLException e) {
 		e.printStackTrace();

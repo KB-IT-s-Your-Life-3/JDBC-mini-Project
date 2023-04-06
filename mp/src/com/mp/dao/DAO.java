@@ -267,18 +267,37 @@ public class DAO implements DAOTemplete{
 		return arrTAsset;
 	}
 	
+	
 	@Override
+	// 지역별 매물 가격 평균을 구마다 동별로 순위를 매긴다.
 	public ArrayList<AssetTable> getAvgAssetsPrice() throws SQLException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
+		ArrayList<AssetTable> arrTAsset = new ArrayList<>();
 		try {
 			conn = getConnect();
+			String query = "SELECT a.gu, a.dong, Avg_Price, RANK() OVER (PARTITION BY a.gu ORDER BY Avg_Price DESC) RANK "
+					+ "FROM REGION a, "
+					+ "( SELECT dong_id, ROUND(AVG(price)) Avg_Price "
+					+ "FROM ASSET "
+					+ "WHERE is_dealed = 0 "
+					+ "GROUP BY dong_id "
+					+ ") b "
+					+ "WHERE a.dong_id = b.dong_id "
+					+ "ORDER BY a.gu";
+			ps = conn.prepareStatement(query);
+			rs = ps.executeQuery();
+			while(rs.next()) {
+				arrTAsset.add(new AssetTable(rs.getString("gu"), rs.getString("dong"), rs.getInt("RANK")));
+			}
 		} finally {
 			closeAll(conn, ps, rs);
 		}
-		return null;
+		return arrTAsset;
 	}
+	
+	
 	
 	@Override
 	public ArrayList<AssetTable> getAllAssets() throws SQLException {
