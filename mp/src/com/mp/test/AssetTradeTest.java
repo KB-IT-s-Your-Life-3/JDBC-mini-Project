@@ -12,6 +12,7 @@ import config.ServerInfo;
 public class AssetTradeTest {
   public static void main(String[] args) throws RecordNotFoundException {
     DAO db = DAO.getInstance();
+    ArrayList<Asset> arrAsset = new ArrayList<>();
     
     System.out.println("=====gilyeon test======");
 //    System.err.println("---addAsset(Asset asset)---");
@@ -23,18 +24,18 @@ public class AssetTradeTest {
     
     System.err.println("---getAssets(String address)---");
     try {
-    	ArrayList<Asset> arrAsset = db.getAssets("구로동");
+    	arrAsset = db.getAssets("구로동");
+		for(Asset a : arrAsset)System.out.println(a);
+		
+		arrAsset = db.getAssets("강남구");
+		for(Asset a : arrAsset)System.out.println(a);
+		
+		arrAsset = db.getAssets("대한민국");
 		for(Asset a : arrAsset)System.out.println(a);
 	} catch (SQLException e) {
 		e.printStackTrace();
 	}
-    try {
-    	ArrayList<Asset> arrAsset = db.getAssets("강남구");
-		for(Asset a : arrAsset)System.out.println(a);
-	} catch (SQLException e) {
-		e.printStackTrace();
-	}
-    
+  
     
     
   }

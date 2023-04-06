@@ -215,9 +215,9 @@ public class DAO implements DAOTemplete{
 		String regionName = null;
 		ArrayList<Asset> arrAsset = new ArrayList<>();
 		
-//		if(address.charAt(-1) != '구' && address.charAt(-1) != '동') {
-//			throw new RecordNotFoundException("'구'/'동'단위로 입력해주세요.");
-//		}
+		if(address.charAt(address.length() - 1) != '구' && address.charAt(address.length() - 1) != '동') {
+			throw new RecordNotFoundException("'구'/'동'단위로 입력해주세요.");
+		}
 	
 		try {
 			conn = getConnect();
