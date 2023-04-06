@@ -180,15 +180,21 @@ public class DAO implements DAOTemplete{
 			rs = ps.executeQuery();
 			if(rs.next()) {
 				long price = rs.getLong("price");
-				Deal deal = checkDeal(custId, assetId, conn);
-				if(deal!=null) updateDeal(deal, custId, conn);
-				else createDeal(custId, assetId, price, conn);
-				
-				query = "UPDATE asset SET is_dealed=1 WHERE asset_id=?";
+				query = "SELECT * FROM custoemr WHERE cust_id=?";
 				ps = conn.prepareStatement(query);
-				ps.setInt(1, assetId);
-				int row = ps.executeUpdate();
-				System.out.println(row + " asset is dealed.");
+				ps.setInt(1,custId);
+				rs = ps.executeQuery();
+				if(rs.next()) {
+					if(price <= rs.getLong("money")) {
+						Deal deal = checkDeal(assetId, conn);
+						if(deal!=null) 	updateDeal(deal, custId, conn);
+						else 			createDeal(custId, assetId, price, conn);
+						
+						cancelEnrollAsset(custId, assetId);
+						System.out.println(" asset is dealed.");
+					}
+					else throw new InvalidMoneyException("잔액이 부족합니다.");
+				} else System.out.println("Something wrong");
 			} else throw new AlreadyDealedException("존재하지 않는 매물입니다.");
 		} finally {
 			closeAll(conn,ps);
@@ -220,15 +226,14 @@ public class DAO implements DAOTemplete{
 		updateCustomer(owner);
 	}
 	
-	public Deal checkDeal(int custId, int assetId, Connection conn) throws SQLException {
+	public Deal checkDeal(int assetId, Connection conn) throws SQLException {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		Deal deal = null;
 		conn = getConnect();
-		String query = "SELECT deal_id, cust_id, asset_id, dealed_money, dealed_at FROM deal WHERE cust_id=? AND asset_id=?";
+		String query = "SELECT deal_id, cust_id, asset_id, dealed_money, dealed_at FROM deal WHERE asset_id=?";
 		ps = conn.prepareStatement(query);
-		ps.setInt(1, custId);
-		ps.setInt(2, assetId);
+		ps.setInt(1, assetId);
 		rs = ps.executeQuery();
 		if(rs.next()) deal = new Deal(
 								rs.getInt("deal_id"),
@@ -307,17 +312,17 @@ public class DAO implements DAOTemplete{
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
-		ArrayList<Asset> arr = null;
+		ArrayList<Asset> arr = new ArrayList<>();
 		try {
 			conn = getConnect();
-			String query = "SELECT a.asset_id, r.go, r.dong, a.asset_name, a.created_at, a.price, a.area, a.constructed_year, a.is_dealed "
-					+ "FROM deal d, asset a, region "
-					+ "WHERE d.cust_id=? AND d.asset_id = a.asset_id AND a.dong_id = r.dong_id;";
+			String query = "SELECT a.asset_name, r.gu, r.dong, a.created_at, a.price, a.area, a.constructed_year, a.is_dealed "
+					+ "FROM deal d, asset a, region r "
+					+ "WHERE d.cust_id=? AND d.asset_id = a.asset_id AND a.dong_id = r.dong_id";
 			ps = conn.prepareStatement(query);
 			ps.setInt(1, custId);
 			rs = ps.executeQuery();
 			while(rs.next()) {
-//				arr.add(new Asset(rs.getInt("asset_id"), , query, query, query, query, custId, custId, false))
+				arr.add(new Asset(rs.getString("asset_name"), rs.getString("gu"), rs.getString("dong"), rs.getLong("price"), rs.getDouble("area"), rs.getInt("constructed_year"), rs.getInt("is_dealed")));
 			};
 		} finally {
 			closeAll(conn, ps, rs);
