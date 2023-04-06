@@ -5,8 +5,16 @@ public class AssetTable {
   private String gu, dong;
 
   public AssetTable() {};
+  
 
-  public String getDong() {
+  public AssetTable( String gu, String dong, int num) {
+	this.num = num;
+	this.gu = gu;
+	this.dong = dong;
+}
+
+
+public String getDong() {
     return dong;
   }
 
@@ -29,5 +37,13 @@ public class AssetTable {
   public void setNum(int num) {
     this.num = num;
   }
+
+
+@Override
+public String toString() {
+	return "AssetTable [gu=" + gu + ", dong=" + dong + ", num=" + num +"]";
+}
+  
+  
   
 }

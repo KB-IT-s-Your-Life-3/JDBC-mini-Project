@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import com.mp.dao.DAO;
 import com.mp.exception.RecordNotFoundException;
 import com.mp.vo.Asset;
+import com.mp.vo.AssetTable;
 
 import config.ServerInfo;
 
@@ -13,6 +14,7 @@ public class AssetTradeTest {
   public static void main(String[] args) throws RecordNotFoundException {
     DAO db = DAO.getInstance();
     ArrayList<Asset> arrAsset = new ArrayList<>();
+    ArrayList<AssetTable> arrTAsset = new ArrayList<>();
     
     System.out.println("=====gilyeon test======");
 //    System.err.println("---addAsset(Asset asset)---");
@@ -22,16 +24,24 @@ public class AssetTradeTest {
 //		e.printStackTrace();
 //	}
     
-    System.err.println("---getAssets(String address)---");
+//    System.err.println("---getAssets(String address)---");
+//    try {
+//    	arrAsset = db.getAssets("구로동");
+//		for(Asset a : arrAsset)System.out.println(a);
+//		
+//		arrAsset = db.getAssets("구로구");
+//		for(Asset a : arrAsset)System.out.println(a);
+//		
+//		arrAsset = db.getAssets("대한민국");
+//		for(Asset a : arrAsset)System.out.println(a);
+//	} catch (SQLException e) {
+//		e.printStackTrace();
+//	}
+    
+    System.err.println("---getAssetsCount()---");
     try {
-    	arrAsset = db.getAssets("구로동");
-		for(Asset a : arrAsset)System.out.println(a);
-		
-		arrAsset = db.getAssets("강남구");
-		for(Asset a : arrAsset)System.out.println(a);
-		
-		arrAsset = db.getAssets("대한민국");
-		for(Asset a : arrAsset)System.out.println(a);
+    	arrTAsset = db.getAssetsCount();
+    	for(AssetTable a : arrTAsset)System.out.println(a);
 	} catch (SQLException e) {
 		e.printStackTrace();
 	}

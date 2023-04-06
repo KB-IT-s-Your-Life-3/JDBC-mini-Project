@@ -236,17 +236,35 @@ public class DAO implements DAOTemplete{
 		return arrAsset;
 	}
 	
+	
 	@Override
+	// 전체 매물 중, 동별로 구매가능한 매물 개수 구하기
 	public ArrayList<AssetTable> getAssetsCount() throws SQLException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
+		String query = null;
+		ArrayList<AssetTable> arrTAsset = new ArrayList<>();
 		try {
 			conn = getConnect();
+			query = "SELECT a.gu, a.dong, Enabled_buying "
+					+ "FROM REGION a, "
+					+ "( SELECT dong_id, COUNT(dong_id) Enabled_buying FROM ASSET "
+					+ "WHERE is_dealed = 0 "
+					+ "GROUP BY dong_id "
+					+ ") b "
+					+ "WHERE a.dong_id = b.dong_id "
+					+ "ORDER BY a.gu";
+			ps = conn.prepareStatement(query);
+			rs = ps.executeQuery();
+			while(rs.next()) {
+				arrTAsset.add(new AssetTable(rs.getString("gu"), rs.getString("dong"), rs.getInt("Enabled_buying")));
+			}
+			
 		} finally {
 			closeAll(conn, ps, rs);
 		}
-		return null;
+		return arrTAsset;
 	}
 	
 	@Override
