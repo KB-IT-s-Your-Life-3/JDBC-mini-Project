@@ -1,21 +1,33 @@
 package com.mp.vo;
 public class Asset {
   private int assetId, constructedYear;
-  private String assetName, address, gu, dong, cereatedAt;
-  private long price, regionCode;
+  private String assetName, address, gu, dong, cereatedAt, regionCode;
+  private long price;
   private boolean isDealed;
   private double area;
   
   
 
-  public Asset(long regionCode, String assetName, long price, double area, int constructedYear) {
+  public Asset(String regionCode, String assetName, long price, double area, int constructedYear) {
 	super();
 	this.constructedYear = constructedYear;
 	this.assetName = assetName;
 	this.area = area;
 	this.price = price;
 	this.regionCode = regionCode;
-}
+  }
+  
+  public Asset(int regionCode, int assetId, String assetName, long price, double area, String gu, String dong) {
+		super();
+		this.regionCode = String.valueOf(regionCode);
+		this.assetId = assetId;
+		this.assetName = assetName;
+		this.price = price;
+		this.area = area;
+		this.gu = gu;
+		this.dong = dong;
+	  }
+
 
 public int getAssetId() {
     return assetId;
@@ -93,8 +105,17 @@ public int getAssetId() {
 	    return address;
 	  }
   
-  public long getregionCode() {
+  public String getregionCode() {
 	  return regionCode;
   }
+
+@Override
+public String toString() {
+	return "Asset [assetId=" + assetId + ", constructedYear=" + constructedYear + ", assetName=" + assetName
+			+ ", address=" + address + ", gu=" + gu + ", dong=" + dong + ", cereatedAt=" + cereatedAt + ", regionCode="
+			+ regionCode + ", price=" + price + ", isDealed=" + isDealed + ", area=" + area + "]";
+}
+  
+  
 
 }

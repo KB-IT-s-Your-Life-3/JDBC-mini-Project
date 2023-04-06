@@ -193,7 +193,7 @@ public class DAO implements DAOTemplete{
 			conn = getConnect();
 			String query = "INSERT INTO ASSET (ASSET_ID, DONG_ID, ASSET_NAME, CREATED_AT, PRICE, AREA, CONSTRUCTED_YEAR) VALUES (SEQ_ASSET.nextVal, ?, ?, SYSDATE, ?, ?, ?)";
 			ps = conn.prepareStatement(query);
-			ps.setLong(1, asset.getregionCode());
+			ps.setLong(1, Long.parseLong(asset.getregionCode()));
 			ps.setString(2, asset.getAssetName());
 			ps.setLong(3, asset.getPrice());
 			ps.setDouble(4, asset.getArea());
@@ -206,16 +206,34 @@ public class DAO implements DAOTemplete{
 	}
 	
 	@Override
-	public ArrayList<Asset> getAssets(int custId) throws SQLException, RecordNotFoundException {
+	// param으로 들어온 주소와 같은(같은 구/ 같은 동) 구매가능 한 매물 찾기
+	public ArrayList<Asset> getAssets(String address) throws SQLException, RecordNotFoundException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
+		String query = null;
+		String regionName = null;
+		ArrayList<Asset> arrAsset = new ArrayList<>();
+		
+//		if(address.charAt(-1) != '구' && address.charAt(-1) != '동') {
+//			throw new RecordNotFoundException("'구'/'동'단위로 입력해주세요.");
+//		}
+	
 		try {
 			conn = getConnect();
+			query = "SELECT r.dong_id, a.asset_id, a.asset_name, a.price, a.area, r.gu, r.dong FROM ASSET a, REGION r  WHERE (r.gu = ? OR r.dong= ?) AND a.dong_id = r.dong_id AND is_dealed = 0";
+			ps = conn.prepareStatement(query);
+			ps.setString(1, address);
+			ps.setString(2, address);
+			rs = ps.executeQuery();
+			while(rs.next()) {
+				arrAsset.add(new Asset(rs.getInt("dong_id"), rs.getInt("asset_id"), rs.getString("asset_name"), rs.getLong("price"), rs.getDouble("area"), rs.getString("gu"), rs.getString("dong") ));
+			}
 		} finally {
 			closeAll(conn, ps, rs);
 		}
-		return null;
+		
+		return arrAsset;
 	}
 	
 	@Override
@@ -254,6 +272,12 @@ public class DAO implements DAOTemplete{
 		} finally {
 			closeAll(conn, ps, rs);
 		}
+		return null;
+	}
+
+	@Override
+	public ArrayList<Asset> getAssets(int custId) throws SQLException, RecordNotFoundException {
+		// TODO Auto-generated method stub
 		return null;
 	}  
   
