@@ -64,44 +64,46 @@ public class DAO implements DAOTemplete{
 	public void addCustomer(Customer c) throws SQLException, RecordNotFoundException {
 		Connection conn = null;
 		PreparedStatement ps = null;
-		ResultSet rs = null;
 		try {
-			String[] addr = c.getAddress().split(" ");
 			conn = getConnect();
-			String query = "SELECT dong_id FROM region WHERE gu=? AND dong=?";
+			String query = "INSERT INTO CUSTOMER (CUST_ID, DONG_ID, CUST_NAME, MONEY, IS_DELETED) VALUES (seq_customer.nextVal , ?, ?, ?, ?)";
 			ps = conn.prepareStatement(query);
-			ps.setString(1, addr[0]);
-			ps.setString(2, addr[1]);
-			rs = ps.executeQuery();
-			if(rs.next()) {
-				String dong_id = rs.getString("dong_id");
-				query = "INSERT INTO CUSTOMER (CUST_ID, DONG_ID, CUST_NAME, MONEY, IS_DELETED) VALUES (seq_customer.nextVal , ?, ?, ?, ?)";
-				ps = conn.prepareStatement(query);
-				ps.setString(1, dong_id);
-				ps.setString(2, c.getCustName());
-				ps.setLong(3, c.getMoney());
-				ps.setInt(4, c.getIsDeleted() ? 1 :0);
-				int row = ps.executeUpdate();
-				System.out.println(row + " Customer created");
-			} else {
-				throw new RecordNotFoundException("존재하지 않는 지역명입니다.");
-			}
+			
+			ps.setString(1, c.getDongId());
+			ps.setString(2, c.getCustName());
+			ps.setLong(3, c.getMoney());
+			ps.setInt(4, c.getIsDeleted());
+			System.out.println(" Customer created");
+			
 		} finally {
-			closeAll(conn,ps, rs);
+			closeAll(conn,ps);
 		}
 	}
 	
 	@Override
-	public Customer getCustomer(String id) throws SQLException, RecordNotFoundException {
+	public Customer getCustomer(int custId) throws SQLException, RecordNotFoundException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
+		Customer customer = null;
 		try {
 			conn = getConnect();
+			String query = "SELECT CUST_ID, DONG_ID, CUST_NAME, MONEY, IS_DELETED FROM CUSTOMER WHERE CUST_ID =?";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, custId);
+			rs = ps.executeQuery();
+			if(rs.next()) {
+				customer = new Customer(custId, 
+										rs.getString("DONG_ID"), 
+										rs.getString("CUST_NAME"),
+										rs.getLong("MONEY"),
+										rs.getInt("IS_DELETED"));
+			}
+			
 		} finally {
 			closeAll(conn, ps, rs);
 		}
-		return null;
+		return customer;
 	}
 	
 	@Override
@@ -109,20 +111,35 @@ public class DAO implements DAOTemplete{
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
+		ArrayList<Customer> customers = new ArrayList<>();
 		try {
 			conn = getConnect();
+			String query = "SELECT CUST_ID, DONG_ID, CUST_NAME, MONEY, IS_DELETED FROM CUSTOMER";
+			ps = conn.prepareStatement(query);
+			rs = ps.executeQuery();
+			while(rs.next()) {
+				customers.add(new Customer(rs.getInt("CUST_ID"), 
+						rs.getString("DONG_ID"), 
+						rs.getString("CUST_NAME"),
+						rs.getLong("MONEY"),
+						rs.getInt("IS_DELETED")));
+			}
 		} finally {
 			closeAll(conn, ps, rs);
 		}
-		return null;
+		return customers;
 	}
 	
 	@Override
-	public void deleteCustomer(int id) throws SQLException, RecordNotFoundException {
+	public void deleteCustomer(int custId) throws SQLException, RecordNotFoundException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		try {
 			conn = getConnect();
+			String query = "DELETE customer WHERE cust_id = ?";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, custId);
+			System.out.println(ps.executeUpdate() + " row DELETE OK");
 		} finally {
 			closeAll(conn,ps);
 		}
@@ -134,6 +151,13 @@ public class DAO implements DAOTemplete{
 		PreparedStatement ps = null;
 		try {
 			conn = getConnect();
+			String query = "UPDATE customer SET DONG_ID = ?, CUST_NAME = ?, MONEY = ?, IS_DELETED =? WHERE CUSTOMER";
+			ps = conn.prepareStatement(query);
+			ps.setString(1, c.getDongId());
+			ps.setString(2, c.getCustName());
+			ps.setString(3, c.getCustName());
+			ps.setLong(4, c.getMoney());
+			System.out.println("업뎃 완료");
 		} finally {
 			closeAll(conn,ps);
 		}

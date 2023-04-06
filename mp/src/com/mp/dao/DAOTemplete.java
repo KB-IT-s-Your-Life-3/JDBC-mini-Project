@@ -18,7 +18,7 @@ public interface DAOTemplete {
   void closeAll(Connection conn, PreparedStatement ps, ResultSet rs) throws SQLException;
   void closeAll(Connection conn, PreparedStatement ps) throws SQLException;
   void addCustomer(Customer c) throws SQLException, RecordNotFoundException;
-  Customer getCustomer(String id) throws SQLException, RecordNotFoundException;
+  Customer getCustomer(int cust_id) throws SQLException, RecordNotFoundException;
   ArrayList<Customer> getAllCustomer() throws SQLException;
   void deleteCustomer(int id) throws SQLException, RecordNotFoundException;
   void updateCustomer(Customer c) throws SQLException, RecordNotFoundException, InvalidMoneyException;
