@@ -206,7 +206,7 @@ public class DAO implements DAOTemplete{
 	}
 	
 	@Override
-	// param으로 들어온 주소와 같은(같은 구/ 같은 동) 구매가능 한 매물 찾기
+	// address 와 같은 지역의 (구/ 동) 구매가능 한 매물 찾기
 	public ArrayList<Asset> getAssets(String address) throws SQLException, RecordNotFoundException {
 		Connection conn = null;
 		PreparedStatement ps = null;
