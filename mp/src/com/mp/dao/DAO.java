@@ -170,34 +170,47 @@ public class DAO implements DAOTemplete{
 	@Override
 	public void buyAsset(int custId, int assetId) throws SQLException, RecordNotFoundException, AlreadyDealedException, InvalidMoneyException {
 		Connection conn = null;
-		PreparedStatement ps = null;
+		PreparedStatement ps1 = null;
+		PreparedStatement ps2 = null;
+		PreparedStatement ps3 = null;
 		ResultSet rs = null;
 		try {
 			conn = getConnect();
+			conn.setAutoCommit(false);
 			String query = "SELECT price FROM asset WHERE asset_id=? AND is_dealed=0";
-			ps = conn.prepareStatement(query);
-			ps.setInt(1, assetId);
-			rs = ps.executeQuery();
+			ps1 = conn.prepareStatement(query);
+			ps1.setInt(1, assetId);
+			rs = ps1.executeQuery();
 			if(rs.next()) {
 				long price = rs.getLong("price");
-				query = "SELECT * FROM custoemr WHERE cust_id=?";
-				ps = conn.prepareStatement(query);
-				ps.setInt(1,custId);
-				rs = ps.executeQuery();
+				query = "SELECT * FROM customer WHERE cust_id=?";
+				ps2 = conn.prepareStatement(query);
+				ps2.setInt(1,custId);
+				rs = ps2.executeQuery();
 				if(rs.next()) {
 					if(price <= rs.getLong("money")) {
 						Deal deal = checkDeal(assetId, conn);
 						if(deal!=null) 	updateDeal(deal, custId, conn);
 						else 			createDeal(custId, assetId, price, conn);
 						
-						cancelEnrollAsset(custId, assetId);
-						System.out.println(" asset is dealed.");
+						query = "UPDATE asset SET is_dealed=1 WHERE asset_id=?";
+						ps3 = conn.prepareStatement(query);
+						ps3.setInt(1, assetId);
+						int row = ps3.executeUpdate();
+						System.out.println(row + "개의 건물의 판매 등록을 취소하였습니다.");
+						conn.commit();
 					}
 					else throw new InvalidMoneyException("잔액이 부족합니다.");
-				} else System.out.println("Something wrong");
+				} else System.out.println("Something Wrong in buyAsset");
 			} else throw new AlreadyDealedException("존재하지 않는 매물입니다.");
+			
+		} catch(Exception e) {
+			conn.rollback();
+			throw e;
 		} finally {
-			closeAll(conn,ps);
+			conn.setAutoCommit(true);
+			closeAll(conn,ps1);
+			if(ps2!=null)	ps2.close();
 		}
 	}
 	
@@ -209,7 +222,7 @@ public class DAO implements DAOTemplete{
 		ps.setInt(2, assetId);
 		ps.setLong(3, dealedMoney);
 		int row = ps.executeUpdate();
-		System.out.println(row + " deal created");
+		System.out.println(row + "개의 거래가 체결되었습니다.");
 	}
 	
 	public void updateDeal(Deal deal, int custId, Connection conn) throws SQLException, RecordNotFoundException, InvalidMoneyException {
@@ -224,6 +237,7 @@ public class DAO implements DAOTemplete{
 		Customer owner = getCustomer(deal.getCustId());
 		owner.setMoney(owner.getMoney()+deal.getPrice());
 		updateCustomer(owner);
+		
 	}
 	
 	public Deal checkDeal(int assetId, Connection conn) throws SQLException {
@@ -262,7 +276,7 @@ public class DAO implements DAOTemplete{
 				ps = conn.prepareStatement(query);
 				ps.setInt(1, assetId);
 				int row = ps.executeUpdate();
-				System.out.println(row + " assets update to sell");
+				System.out.println(row + "개의 건물을 판매 등록하였습니다.");
 			} else throw new RecordNotFoundException("해당 부동산을 소유하고 있지 않습니다.");
 			
 		} finally {
@@ -287,7 +301,7 @@ public class DAO implements DAOTemplete{
 				ps = conn.prepareStatement(query);
 				ps.setInt(1, assetId);
 				int row = ps.executeUpdate();
-				System.out.println(row + " assets update to do not sell");
+				System.out.println(row + "개의 건물의 판매 등록을 취소하였습니다.");
 			} else throw new RecordNotFoundException("해당 부동산을 소유하고 있지 않습니다.");
 			
 		} finally {
@@ -315,15 +329,22 @@ public class DAO implements DAOTemplete{
 		ArrayList<Asset> arr = new ArrayList<>();
 		try {
 			conn = getConnect();
-			String query = "SELECT a.asset_name, r.gu, r.dong, a.created_at, a.price, a.area, a.constructed_year, a.is_dealed "
-					+ "FROM deal d, asset a, region r "
-					+ "WHERE d.cust_id=? AND d.asset_id = a.asset_id AND a.dong_id = r.dong_id";
+			
+			String query = "SELECT cust_id FROM customer WHERE cust_id=?";
 			ps = conn.prepareStatement(query);
 			ps.setInt(1, custId);
 			rs = ps.executeQuery();
-			while(rs.next()) {
+			if(rs.next()) {
+				query = "SELECT a.asset_id, r.gu, r.dong, a.asset_name, a.created_at, a.price, a.area, a.constructed_year, a.is_dealed "
+					+ "FROM deal d, asset a, region r "
+					+ "WHERE d.cust_id=? AND d.asset_id = a.asset_id AND a.dong_id = r.dong_id";
+				ps = conn.prepareStatement(query);
+				ps.setInt(1, custId);
+				rs = ps.executeQuery();
+				while(rs.next()) {
 				arr.add(new Asset(rs.getString("asset_name"), rs.getString("gu"), rs.getString("dong"), rs.getLong("price"), rs.getDouble("area"), rs.getInt("constructed_year"), rs.getInt("is_dealed")));
-			};
+				};
+			} else throw new RecordNotFoundException("존재하지 않는 사용자입니다.");
 		} finally {
 			closeAll(conn, ps, rs);
 		}
