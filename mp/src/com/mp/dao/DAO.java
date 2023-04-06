@@ -65,30 +65,19 @@ public class DAO implements DAOTemplete{
 	public void addCustomer(Customer c) throws SQLException, RecordNotFoundException {
 		Connection conn = null;
 		PreparedStatement ps = null;
-		ResultSet rs = null;
 		try {
-			String[] addr = c.getAddress().split(" ");
 			conn = getConnect();
-			String query = "SELECT dong_id FROM region WHERE gu=? AND dong=?";
+			String query = "INSERT INTO CUSTOMER (CUST_ID, DONG_ID, CUST_NAME, MONEY, IS_DELETED) VALUES (seq_customer.nextVal , ?, ?, ?, ?)";
 			ps = conn.prepareStatement(query);
-			ps.setString(1, addr[0]);
-			ps.setString(2, addr[1]);
-			rs = ps.executeQuery();
-			if(rs.next()) {
-				String dong_id = rs.getString("dong_id");
-				query = "INSERT INTO CUSTOMER (CUST_ID, DONG_ID, CUST_NAME, MONEY, IS_DELETED) VALUES (seq_customer.nextVal , ?, ?, ?, ?)";
-				ps = conn.prepareStatement(query);
-				ps.setString(1, dong_id);
-				ps.setString(2, c.getCustName());
-				ps.setLong(3, c.getMoney());
-				ps.setInt(4, c.getIsDeleted() ? 1 :0);
-				int row = ps.executeUpdate();
-				System.out.println(row + " Customer created");
-			} else {
-				throw new RecordNotFoundException("존재하지 않는 지역명입니다.");
-			}
+			
+			ps.setString(1, c.getDongId());
+			ps.setString(2, c.getCustName());
+			ps.setLong(3, c.getMoney());
+			ps.setInt(4, c.getIsDeleted());
+			System.out.println(" Customer created");
+			
 		} finally {
-			closeAll(conn,ps, rs);
+			closeAll(conn,ps);
 		}
 	}
 	
@@ -97,12 +86,25 @@ public class DAO implements DAOTemplete{
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
+		Customer customer = null;
 		try {
 			conn = getConnect();
+			String query = "SELECT cust_id, dong_id, cust_name, money, is_deleted FROM customer WHERE CUST_ID=?";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, custId);
+			rs = ps.executeQuery();
+			if(rs.next()) {
+				customer = new Customer(custId, 
+										rs.getString("dong_id"), 
+										rs.getString("cust_name"),
+										rs.getLong("money"),
+										rs.getInt("is_deleted"));
+			}
+			
 		} finally {
 			closeAll(conn, ps, rs);
 		}
-		return null;
+		return customer;
 	}
 	
 	@Override
@@ -110,20 +112,35 @@ public class DAO implements DAOTemplete{
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
+		ArrayList<Customer> customers = new ArrayList<>();
 		try {
 			conn = getConnect();
+			String query = "SELECT CUST_ID, DONG_ID, CUST_NAME, MONEY, IS_DELETED FROM CUSTOMER";
+			ps = conn.prepareStatement(query);
+			rs = ps.executeQuery();
+			while(rs.next()) {
+				customers.add(new Customer(rs.getInt("CUST_ID"), 
+						rs.getString("DONG_ID"), 
+						rs.getString("CUST_NAME"),
+						rs.getLong("MONEY"),
+						rs.getInt("IS_DELETED")));
+			}
 		} finally {
 			closeAll(conn, ps, rs);
 		}
-		return null;
+		return customers;
 	}
 	
 	@Override
-	public void deleteCustomer(int id) throws SQLException, RecordNotFoundException {
+	public void deleteCustomer(int custId) throws SQLException, RecordNotFoundException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		try {
 			conn = getConnect();
+			String query = "DELETE customer WHERE cust_id = ?";
+			ps = conn.prepareStatement(query);
+			ps.setInt(1, custId);
+			System.out.println(ps.executeUpdate() + " row DELETE OK");
 		} finally {
 			closeAll(conn,ps);
 		}
@@ -133,8 +150,18 @@ public class DAO implements DAOTemplete{
 	public void updateCustomer(Customer c) throws SQLException, RecordNotFoundException, InvalidMoneyException {
 		Connection conn = null;
 		PreparedStatement ps = null;
+		System.out.println("!!!!");
 		try {
 			conn = getConnect();
+			String query = "UPDATE customer SET DONG_ID = ?, CUST_NAME = ?, MONEY = ?, IS_DELETED =? WHERE cust_id=?";
+			ps = conn.prepareStatement(query);
+			ps.setString(1, c.getDongId());
+			ps.setString(2, c.getCustName());
+			ps.setLong(3, c.getMoney());
+			ps.setInt(4, c.getIsDeleted());
+			ps.setInt(5, c.getCustId());
+			ps.executeUpdate();
+			System.out.println("업뎃 완료");
 		} finally {
 			closeAll(conn,ps);
 		}
@@ -183,25 +210,24 @@ public class DAO implements DAOTemplete{
 			rs = ps1.executeQuery();
 			if(rs.next()) {
 				long price = rs.getLong("price");
-				query = "SELECT * FROM customer WHERE cust_id=?";
-				ps2 = conn.prepareStatement(query);
-				ps2.setInt(1,custId);
-				rs = ps2.executeQuery();
-				if(rs.next()) {
-					if(price <= rs.getLong("money")) {
-						Deal deal = checkDeal(assetId, conn);
-						if(deal!=null) 	updateDeal(deal, custId, conn);
-						else 			createDeal(custId, assetId, price, conn);
-						
-						query = "UPDATE asset SET is_dealed=1 WHERE asset_id=?";
-						ps3 = conn.prepareStatement(query);
-						ps3.setInt(1, assetId);
-						int row = ps3.executeUpdate();
-						System.out.println(row + "개의 건물의 판매 등록을 취소하였습니다.");
-						conn.commit();
-					}
-					else throw new InvalidMoneyException("잔액이 부족합니다.");
-				} else System.out.println("Something Wrong in buyAsset");
+				Customer c = getCustomer(custId);
+				if(price <= c.getMoney()) {
+					Deal deal = getDeal(assetId, conn);
+					if(deal!=null) 	updateDeal(deal, custId, conn);
+					else 			createDeal(custId, assetId, price, conn);
+					
+					query = "UPDATE asset SET is_dealed=1 WHERE asset_id=?";
+					ps3 = conn.prepareStatement(query);
+					ps3.setInt(1, assetId);
+					int row = ps3.executeUpdate();
+					
+					c.setMoney(c.getMoney()-price);
+					updateCustomer(c);
+					
+					System.out.println(row + "개의 건물의 판매 등록을 취소하였습니다.");
+					conn.commit();
+				}
+				else throw new InvalidMoneyException("잔액이 부족합니다.");
 			} else throw new AlreadyDealedException("존재하지 않는 매물입니다.");
 			
 		} catch(Exception e) {
@@ -237,10 +263,9 @@ public class DAO implements DAOTemplete{
 		Customer owner = getCustomer(deal.getCustId());
 		owner.setMoney(owner.getMoney()+deal.getPrice());
 		updateCustomer(owner);
-		
 	}
 	
-	public Deal checkDeal(int assetId, Connection conn) throws SQLException {
+	public Deal getDeal(int assetId, Connection conn) throws SQLException {
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		Deal deal = null;
@@ -250,12 +275,12 @@ public class DAO implements DAOTemplete{
 		ps.setInt(1, assetId);
 		rs = ps.executeQuery();
 		if(rs.next()) deal = new Deal(
-								rs.getInt("deal_id"),
-								rs.getInt("cust_id"),
-								rs.getInt("asset_id"),
-								rs.getLong("dealed_money"),
-								rs.getTimestamp("dealted_at").toLocalDateTime()
-							);
+			rs.getInt("deal_id"),
+			rs.getInt("cust_id"),
+			rs.getInt("asset_id"),
+			rs.getLong("dealed_money"),
+			rs.getTimestamp("dealed_at").toLocalDateTime()
+		);
 		return deal;
 	}
 	
@@ -390,10 +415,5 @@ public class DAO implements DAOTemplete{
 		return null;
 	}
 
-	@Override
-	public Customer getCustomer(String id) throws SQLException, RecordNotFoundException {
-		// TODO Auto-generated method stub
-		return null;
-	}  
   
 }

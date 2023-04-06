@@ -1,24 +1,21 @@
 package com.mp.vo;
 public class Asset {
-  public Asset(int assetId, int constructedYear, String assetName, String gu, String dong, String cereatedAt,
-			float size, long price, boolean isDealed) {
+  public Asset(String assetName, String gu, String dong, long price, double area, int constructedYear, int isDealed) {
 		super();
-		this.assetId = assetId;
 		this.constructedYear = constructedYear;
 		this.assetName = assetName;
 		this.gu = gu;
 		this.dong = dong;
 		this.cereatedAt = cereatedAt;
-		this.size = size;
+		this.area = area;
 		this.price = price;
 		this.isDealed = isDealed;
 	}
 
-private int assetId, constructedYear;
+  private int assetId, constructedYear, isDealed;
   private String assetName, gu, dong, cereatedAt;
-  private float size;
+  private double area;
   private long price;
-  private boolean isDealed;
 
   public int getAssetId() {
     return assetId;
@@ -52,11 +49,11 @@ private int assetId, constructedYear;
     this.constructedYear = constructedYear;
   }
 
-  public boolean getIsDealed() {
+  public int getIsDealed() {
     return isDealed;
   }
 
-  public void setIsDealed(boolean isDealed) {
+  public void setIsDealed(int isDealed) {
     this.isDealed = isDealed;
   }
 
@@ -84,12 +81,12 @@ private int assetId, constructedYear;
     this.price = price;
   }
 
-  public float getSize() {
-    return size;
+  public double getSize() {
+    return area;
   }
 
-  public void setSize(float size) {
-    this.size = size;
+  public void setSize(double area) {
+    this.area = area;
   }
 
 }

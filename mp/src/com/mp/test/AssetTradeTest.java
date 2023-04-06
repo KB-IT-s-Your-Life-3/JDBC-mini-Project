@@ -4,30 +4,51 @@ import java.util.ArrayList;
 
 import com.mp.dao.DAO;
 import com.mp.vo.Deal;
+import com.mp.vo.Customer;
 
 import config.ServerInfo;
 
 public class AssetTradeTest {
   public static void main(String[] args) {
     DAO db = DAO.getInstance();
+
     try {
     	// buyAsset;
-//    	db.buyAsset(1, 2);
+    	db.buyAsset(3, 1);
     	
     	// getPortfolio;
 //    	ArrayList<Deal> arr = db.getPortfolio(1);
 //    	for(Deal d : arr)	System.out.println(d.getDealId());
-//    	db.enrollAsset(1, 1);
     	
     	// enrollAsset
-//    	db.enrollAsset(1, 2);
+//    	db.enrollAsset(2, 1);
     	
     	// cancelEnrollAsset
-    	db.cancelEnrollAsset(1, 2);
+//    	db.cancelEnrollAsset(1, 2);
+    	
+    	System.out.println("///////////////////////");
+    	
+    	// 전체 고객 출력
+//    	ArrayList<Customer> list=db.getAllCustomer();
+//		for(Customer c : list) System.out.println(c);
+    	
+    	// getCustomer
+//    	Customer c = db.getCustomer(1); 
+//		System.out.println(c);
+    	
+    	// deleteCustomer
+//    	db.deleteCustomer(5);
+    	
+    	// updateCustomer
+//    	db.updateCustomer(new Customer(3, "차민혁", "115010901", 1050001, 0));
+    	
+    	// addCustomer
+//    	db.addCustomer(new Customer("차민혁", "115010901", 1050001, 0));
     	
     } catch(Exception e) {
     	System.out.println(e.getMessage());
     }
+
   }
 
   static {
