@@ -186,11 +186,20 @@ public class DAO implements DAOTemplete{
 	}
 	
 	@Override
-	public void addAsset(Asset a) throws SQLException {
+	public void addAsset(Asset asset) throws SQLException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		try {
 			conn = getConnect();
+			String query = "INSERT INTO ASSET (ASSET_ID, DONG_ID, ASSET_NAME, CREATED_AT, PRICE, AREA, CONSTRUCTED_YEAR) VALUES (SEQ_ASSET.nextVal, ?, ?, SYSDATE, ?, ?, ?)";
+			ps = conn.prepareStatement(query);
+			ps.setLong(1, asset.getregionCode());
+			ps.setString(2, asset.getAssetName());
+			ps.setLong(3, asset.getPrice());
+			ps.setDouble(4, asset.getArea());
+			ps.setInt(5, asset.getConstructedYear());
+			int row = ps.executeUpdate();
+			System.out.println(row + " Asset is Created !");
 		} finally {
 			closeAll(conn,ps);
 		}

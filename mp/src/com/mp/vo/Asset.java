@@ -1,12 +1,23 @@
 package com.mp.vo;
 public class Asset {
   private int assetId, constructedYear;
-  private String assetName, gu, dong, cereatedAt;
-  private float size;
-  private long price;
+  private String assetName, address, gu, dong, cereatedAt;
+  private long price, regionCode;
   private boolean isDealed;
+  private double area;
+  
+  
 
-  public int getAssetId() {
+  public Asset(long regionCode, String assetName, long price, double area, int constructedYear) {
+	super();
+	this.constructedYear = constructedYear;
+	this.assetName = assetName;
+	this.area = area;
+	this.price = price;
+	this.regionCode = regionCode;
+}
+
+public int getAssetId() {
     return assetId;
   }
 
@@ -70,12 +81,20 @@ public class Asset {
     this.price = price;
   }
 
-  public float getSize() {
-    return size;
+  public double getArea() {
+    return area;
   }
 
-  public void setSize(float size) {
-    this.size = size;
+  public void setArea(float area) {
+    this.area = area;
+  }
+  
+  public String getAddress() {
+	    return address;
+	  }
+  
+  public long getregionCode() {
+	  return regionCode;
   }
 
 }
