@@ -24,12 +24,12 @@ public class Customer {
   };
   
   @Override
-public String toString() {
+  public String toString() {
 	return "Customer [custId=" + custId + ", custName=" + custName + ", dongId=" + dongId + ", money=" + money
 			+ ", isDeleted=" + isDeleted + ", dealArr=" + dealArr + "]";
-}
+  }
 
-public int getCustId() {
+  public int getCustId() {
     return custId;
   }
   
@@ -69,8 +69,7 @@ public int getCustId() {
     this.isDeleted = isDeleted;
   }
 
-public String getDongId() {
-	// TODO Auto-generated method stub
+  public String getDongId() {
 	return dongId;
-}
+  }
 }

@@ -19,10 +19,8 @@ public interface DAOTemplete {
   void closeAll(Connection conn, PreparedStatement ps) throws SQLException;
   
   void addCustomer(Customer c) throws SQLException, RecordNotFoundException;
-  
-  Customer getCustomer(String id) throws SQLException, RecordNotFoundException;
-  
-  Customer getCustomer(int cust_id) throws SQLException, RecordNotFoundException;
+
+  Customer getCustomer(int custId) throws SQLException, RecordNotFoundException;
 
   ArrayList<Customer> getAllCustomer() throws SQLException;
   
@@ -30,24 +28,26 @@ public interface DAOTemplete {
   
   void updateCustomer(Customer c) throws SQLException, RecordNotFoundException, InvalidMoneyException;
   
-  ArrayList<Deal> getPortfolio(int id) throws SQLException;
-  
-  void buyAsset(int custId, int assetId) throws SQLException, RecordNotFoundException, AlreadyDealedException, InvalidMoneyException;
-  
+  ArrayList<Deal> getPortfolio(int custId) throws SQLException;
+
+  void buyAsset(Customer c, int assetId) throws SQLException, RecordNotFoundException, AlreadyDealedException, InvalidMoneyException;
+
   void enrollAsset(int custId, int assetId) throws SQLException, RecordNotFoundException;
   
   void cancelEnrollAsset(int custId, int assetId) throws SQLException, RecordNotFoundException;
   
   void addAsset(Asset a) throws SQLException;
-  
-  ArrayList<Asset> getAssets(int custId) throws SQLException, RecordNotFoundException;
+
+  ArrayList<Asset> getAssets(Customer c) throws SQLException, RecordNotFoundException;
+
   ArrayList<Asset> getAssets(String address) throws SQLException, RecordNotFoundException;
   
   ArrayList<AssetTable> getAssetsCount() throws SQLException;
   
   ArrayList<AssetTable> getAvgAssetsPrice() throws SQLException;
   
-  ArrayList<AssetTable> getAllAssets() throws SQLException;
+  ArrayList<Asset> getAllAssets() throws SQLException;
   
   boolean isDealed(int assetId, Connection conn) throws SQLException, RecordNotFoundException;
+
 }
