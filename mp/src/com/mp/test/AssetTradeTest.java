@@ -3,8 +3,7 @@ package com.mp.test;
 import java.util.ArrayList;
 
 import com.mp.dao.DAO;
-import com.mp.vo.Deal;
-import com.mp.vo.Customer;
+import com.mp.vo.Asset;
 
 import config.ServerInfo;
 
@@ -14,7 +13,7 @@ public class AssetTradeTest {
 
     try {
     	// buyAsset;
-    	db.buyAsset(3, 1);
+//    	db.buyAsset(3, 1);
     	
     	// getPortfolio;
 //    	ArrayList<Deal> arr = db.getPortfolio(1);
@@ -25,6 +24,10 @@ public class AssetTradeTest {
     	
     	// cancelEnrollAsset
 //    	db.cancelEnrollAsset(1, 2);
+    	
+    	// getAssets
+    	ArrayList<Asset> arr = db.getAssets(db.getCustomer(2));
+    	for(Asset a : arr)	System.out.println(a);
     	
     	System.out.println("///////////////////////");
     	

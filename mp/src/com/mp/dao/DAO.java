@@ -195,46 +195,39 @@ public class DAO implements DAOTemplete{
 	}
 	
 	@Override
-	public void buyAsset(int custId, int assetId) throws SQLException, RecordNotFoundException, AlreadyDealedException, InvalidMoneyException {
+	public void buyAsset(Customer c, int assetId) throws SQLException, RecordNotFoundException, AlreadyDealedException, InvalidMoneyException {
 		Connection conn = null;
 		PreparedStatement ps1 = null;
 		PreparedStatement ps2 = null;
-		PreparedStatement ps3 = null;
 		ResultSet rs = null;
 		try {
 			conn = getConnect();
-			conn.setAutoCommit(false);
 			String query = "SELECT price FROM asset WHERE asset_id=? AND is_dealed=0";
 			ps1 = conn.prepareStatement(query);
 			ps1.setInt(1, assetId);
 			rs = ps1.executeQuery();
 			if(rs.next()) {
 				long price = rs.getLong("price");
-				Customer c = getCustomer(custId);
 				if(price <= c.getMoney()) {
 					Deal deal = getDeal(assetId, conn);
-					if(deal!=null) 	updateDeal(deal, custId, conn);
-					else 			createDeal(custId, assetId, price, conn);
 					
 					query = "UPDATE asset SET is_dealed=1 WHERE asset_id=?";
-					ps3 = conn.prepareStatement(query);
-					ps3.setInt(1, assetId);
-					int row = ps3.executeUpdate();
+					ps2 = conn.prepareStatement(query);
+					ps2.setInt(1, assetId);
+					int row = ps2.executeUpdate();
 					
 					c.setMoney(c.getMoney()-price);
 					updateCustomer(c);
 					
+					if(deal!=null) 	updateDeal(deal, c.getCustId(), conn);
+					else 			createDeal(c.getCustId(), assetId, price, conn);
+					
 					System.out.println(row + "개의 건물의 판매 등록을 취소하였습니다.");
-					conn.commit();
 				}
 				else throw new InvalidMoneyException("잔액이 부족합니다.");
 			} else throw new AlreadyDealedException("존재하지 않는 매물입니다.");
-			
-		} catch(Exception e) {
-			conn.rollback();
-			throw e;
+
 		} finally {
-			conn.setAutoCommit(true);
 			closeAll(conn,ps1);
 			if(ps2!=null)	ps2.close();
 		}
@@ -347,29 +340,22 @@ public class DAO implements DAOTemplete{
 	}
 	
 	@Override
-	public ArrayList<Asset> getAssets(int custId) throws SQLException, RecordNotFoundException {
+	public ArrayList<Asset> getAssets(Customer c) throws SQLException, RecordNotFoundException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
 		ArrayList<Asset> arr = new ArrayList<>();
 		try {
 			conn = getConnect();
-			
-			String query = "SELECT cust_id FROM customer WHERE cust_id=?";
+			String query = "SELECT a.asset_id, r.gu, r.dong, a.asset_name, a.created_at, a.price, a.area, a.constructed_year, a.is_dealed "
+				+ "FROM deal d, asset a, region r "
+				+ "WHERE d.cust_id=? AND d.asset_id = a.asset_id AND a.dong_id = r.dong_id";
 			ps = conn.prepareStatement(query);
-			ps.setInt(1, custId);
+			ps.setInt(1, c.getCustId());
 			rs = ps.executeQuery();
-			if(rs.next()) {
-				query = "SELECT a.asset_id, r.gu, r.dong, a.asset_name, a.created_at, a.price, a.area, a.constructed_year, a.is_dealed "
-					+ "FROM deal d, asset a, region r "
-					+ "WHERE d.cust_id=? AND d.asset_id = a.asset_id AND a.dong_id = r.dong_id";
-				ps = conn.prepareStatement(query);
-				ps.setInt(1, custId);
-				rs = ps.executeQuery();
-				while(rs.next()) {
+			while(rs.next()) {
 				arr.add(new Asset(rs.getString("asset_name"), rs.getString("gu"), rs.getString("dong"), rs.getLong("price"), rs.getDouble("area"), rs.getInt("constructed_year"), rs.getInt("is_dealed")));
-				};
-			} else throw new RecordNotFoundException("존재하지 않는 사용자입니다.");
+			};
 		} finally {
 			closeAll(conn, ps, rs);
 		}

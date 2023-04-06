@@ -23,11 +23,11 @@ public interface DAOTemplete {
   void deleteCustomer(int id) throws SQLException, RecordNotFoundException;
   void updateCustomer(Customer c) throws SQLException, RecordNotFoundException, InvalidMoneyException;
   ArrayList<Deal> getPortfolio(int custId) throws SQLException;
-  void buyAsset(int custId, int assetId) throws SQLException, RecordNotFoundException, AlreadyDealedException, InvalidMoneyException;
+  void buyAsset(Customer c, int assetId) throws SQLException, RecordNotFoundException, AlreadyDealedException, InvalidMoneyException;
   void enrollAsset(int custId, int assetId) throws SQLException, RecordNotFoundException;
   void cancelEnrollAsset(int custId, int assetId) throws SQLException, RecordNotFoundException;
   void addAsset(Asset a) throws SQLException;
-  ArrayList<Asset> getAssets(int custId) throws SQLException, RecordNotFoundException;
+  ArrayList<Asset> getAssets(Customer c) throws SQLException, RecordNotFoundException;
   ArrayList<AssetTable> getAssetsCount() throws SQLException;
   ArrayList<AssetTable> getAvgAssetsPrice() throws SQLException;
   ArrayList<AssetTable> getAllAssets() throws SQLException;
