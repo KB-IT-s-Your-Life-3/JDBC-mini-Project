@@ -210,54 +210,118 @@ public class DAO implements DAOTemplete{
 	}
 	
 	@Override
-	public void addAsset(Asset a) throws SQLException {
+	public void addAsset(Asset asset) throws SQLException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		try {
 			conn = getConnect();
+			String query = "INSERT INTO ASSET (ASSET_ID, DONG_ID, ASSET_NAME, CREATED_AT, PRICE, AREA, CONSTRUCTED_YEAR) VALUES (SEQ_ASSET.nextVal, ?, ?, SYSDATE, ?, ?, ?)";
+			ps = conn.prepareStatement(query);
+			ps.setLong(1, Long.parseLong(asset.getregionCode()));
+			ps.setString(2, asset.getAssetName());
+			ps.setLong(3, asset.getPrice());
+			ps.setDouble(4, asset.getArea());
+			ps.setInt(5, asset.getConstructedYear());
+			int row = ps.executeUpdate();
+			System.out.println(row + " Asset is Created !");
 		} finally {
 			closeAll(conn,ps);
 		}
 	}
 	
 	@Override
-	public ArrayList<Asset> getAssets(int custId) throws SQLException, RecordNotFoundException {
+	// address 와 같은 지역의 (구/ 동) 구매가능 한 매물 찾기
+	public ArrayList<Asset> getAssets(String address) throws SQLException, RecordNotFoundException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
+		String query = null;
+		String regionName = null;
+		ArrayList<Asset> arrAsset = new ArrayList<>();
+		
+		if(address.charAt(address.length() - 1) != '구' && address.charAt(address.length() - 1) != '동') {
+			throw new RecordNotFoundException("'구'/'동'단위로 입력해주세요.");
+		}
+	
 		try {
 			conn = getConnect();
+			query = "SELECT r.dong_id, a.asset_id, a.asset_name, a.price, a.area, r.gu, r.dong FROM ASSET a, REGION r  WHERE (r.gu = ? OR r.dong= ?) AND a.dong_id = r.dong_id AND is_dealed = 0";
+			ps = conn.prepareStatement(query);
+			ps.setString(1, address);
+			ps.setString(2, address);
+			rs = ps.executeQuery();
+			while(rs.next()) {
+				arrAsset.add(new Asset(rs.getInt("dong_id"), rs.getInt("asset_id"), rs.getString("asset_name"), rs.getLong("price"), rs.getDouble("area"), rs.getString("gu"), rs.getString("dong") ));
+			}
 		} finally {
 			closeAll(conn, ps, rs);
 		}
-		return null;
+		
+		return arrAsset;
 	}
 	
+	
 	@Override
+	// 전체 매물 중, 동별로 구매가능한 매물 개수 구하기
 	public ArrayList<AssetTable> getAssetsCount() throws SQLException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
+		String query = null;
+		ArrayList<AssetTable> arrTAsset = new ArrayList<>();
 		try {
 			conn = getConnect();
+			query = "SELECT a.gu, a.dong, Enabled_buying "
+					+ "FROM REGION a, "
+					+ "( SELECT dong_id, COUNT(dong_id) Enabled_buying FROM ASSET "
+					+ "WHERE is_dealed = 0 "
+					+ "GROUP BY dong_id "
+					+ ") b "
+					+ "WHERE a.dong_id = b.dong_id "
+					+ "ORDER BY a.gu";
+			ps = conn.prepareStatement(query);
+			rs = ps.executeQuery();
+			while(rs.next()) {
+				arrTAsset.add(new AssetTable(rs.getString("gu"), rs.getString("dong"), rs.getInt("Enabled_buying")));
+			}
+			
 		} finally {
 			closeAll(conn, ps, rs);
 		}
-		return null;
+		return arrTAsset;
 	}
 	
+	
 	@Override
+	// 지역별 매물 가격 평균을 구마다 동별로 순위를 매긴다.
 	public ArrayList<AssetTable> getAvgAssetsPrice() throws SQLException {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		ResultSet rs = null;
+		ArrayList<AssetTable> arrTAsset = new ArrayList<>();
 		try {
 			conn = getConnect();
+			String query = "SELECT a.gu, a.dong, Avg_Price, RANK() OVER (PARTITION BY a.gu ORDER BY Avg_Price DESC) RANK "
+					+ "FROM REGION a, "
+					+ "( SELECT dong_id, ROUND(AVG(price)) Avg_Price "
+					+ "FROM ASSET "
+					+ "WHERE is_dealed = 0 "
+					+ "GROUP BY dong_id "
+					+ ") b "
+					+ "WHERE a.dong_id = b.dong_id "
+					+ "ORDER BY a.gu";
+			ps = conn.prepareStatement(query);
+			rs = ps.executeQuery();
+			while(rs.next()) {
+				arrTAsset.add(new AssetTable(rs.getString("gu"), rs.getString("dong"), rs.getInt("RANK")));
+			}
 		} finally {
 			closeAll(conn, ps, rs);
 		}
-		return null;
+		return arrTAsset;
 	}
+	
+	
 	
 	@Override
 	public ArrayList<AssetTable> getAllAssets() throws SQLException {
@@ -269,6 +333,12 @@ public class DAO implements DAOTemplete{
 		} finally {
 			closeAll(conn, ps, rs);
 		}
+		return null;
+	}
+
+	@Override
+	public ArrayList<Asset> getAssets(int custId) throws SQLException, RecordNotFoundException {
+		// TODO Auto-generated method stub
 		return null;
 	}  
   
