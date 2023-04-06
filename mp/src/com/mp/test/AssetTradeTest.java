@@ -1,16 +1,23 @@
 package com.mp.test;
 
+
 import java.util.ArrayList;
 
 import com.mp.dao.DAO;
+import com.mp.exception.RecordNotFoundException;
 import com.mp.vo.Asset;
+import com.mp.vo.AssetTable;
+import com.mp.vo.Customer;
+import com.mp.vo.Deal;
 
 import config.ServerInfo;
 
 public class AssetTradeTest {
-  public static void main(String[] args) {
+  public static void main(String[] args) throws RecordNotFoundException {
     DAO db = DAO.getInstance();
-
+    ArrayList<Asset> arrAsset = new ArrayList<>();
+    ArrayList<AssetTable> arrTAsset = new ArrayList<>();
+    
     try {
     	// buyAsset;
 //    	db.buyAsset(3, 1);
@@ -26,8 +33,8 @@ public class AssetTradeTest {
 //    	db.cancelEnrollAsset(1, 2);
     	
     	// getAssets
-    	ArrayList<Asset> arr = db.getAssets(db.getCustomer(2));
-    	for(Asset a : arr)	System.out.println(a);
+//    	ArrayList<Asset> arr = db.getAssets(db.getCustomer(2));
+//    	for(Asset a : arr)	System.out.println(a);
     	
     	System.out.println("///////////////////////");
     	
@@ -47,6 +54,31 @@ public class AssetTradeTest {
     	
     	// addCustomer
 //    	db.addCustomer(new Customer("차민혁", "115010901", 1050001, 0));
+//    	
+//        System.out.println("=====gilyeon test======");
+//      System.err.println("---addAsset(Asset asset)---");
+//  	db.addAsset(new Asset("1144010200", "반포 자이", 837220, 50.8, 2022));
+      
+      
+//      System.err.println("---getAssets(String address)---");
+//      arrAsset = db.getAssets("구로동");
+//      for(Asset a : arrAsset)System.out.println(a);
+//  	  arrAsset = db.getAssets("구로구");
+//  	  for(Asset a : arrAsset)System.out.println(a);
+//  	  arrAsset = db.getAssets("대한민국");
+//  	  for(Asset a : arrAsset)System.out.println(a);
+      
+      
+//      System.err.println("---getAssetsCount()---");
+//      arrTAsset = db.getAssetsCount();
+//      for(AssetTable a : arrTAsset)System.out.println(a);
+        
+//      System.err.println("---getAvgAssetsPrice()---");
+//    	arrTAsset = db.getAvgAssetsPrice();
+//    	for(AssetTable a : arrTAsset)System.out.println(a);
+    	
+    	ArrayList<Asset> arr = db.getAllAssets();
+    	for(Asset a : arr) 	System.out.println(a);
     	
     } catch(Exception e) {
     	System.out.println(e.getMessage());
@@ -62,4 +94,5 @@ public class AssetTradeTest {
 			System.out.println("드라이버 로딩 실패..");
 		}
 	}
+  
 }
